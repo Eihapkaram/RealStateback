@@ -20,9 +20,18 @@ class ProjectController extends Controller
             ->get();
 
         $projects->each(function ($project) {
+
             $project->main_image_url = $project->main_image
-                ? url('api/'.$project->main_image)
+                ? asset('storage/'.$project->main_image)
                 : null;
+
+            // إضافة image_url للـ features
+            $project->features->each(function ($feature) {
+                $feature->image_url = $feature->image
+                    ? asset('storage/'.$feature->image)
+                    : null;
+            });
+
         });
 
         return response()->json($projects);
@@ -46,14 +55,14 @@ class ProjectController extends Controller
         $data = $request->all();
 
         if ($request->hasFile('main_image')) {
-            $path = $request->file('main_image')->store('projects', 'public');
-            $data['main_image'] = $path;
+            $data['main_image'] = $request->file('main_image')
+                ->store('projects', 'public');
         }
 
         $project = Project::create($data);
 
         $project->main_image_url = $project->main_image
-            ? url('api/'.$project->main_image)
+            ? asset('storage/'.$project->main_image)
             : null;
 
         return response()->json($project, 201);
@@ -69,12 +78,20 @@ class ProjectController extends Controller
         ])->loadCount('units');
 
         $project->main_image_url = $project->main_image
-            ? url('api/'.$project->main_image)
+            ? asset('storage/'.$project->main_image)
             : null;
 
+        // project images
         $project->images->each(function ($img) {
-            $img->url = $img->image
-                ? url('api/project-images/files/'.$img->image)
+            $img->image_url = $img->image
+                ? asset('storage/'.$img->image)
+                : null;
+        });
+
+        // project features
+        $project->features->each(function ($feature) {
+            $feature->image_url = $feature->image
+                ? asset('storage/'.$feature->image)
                 : null;
         });
 
@@ -99,17 +116,21 @@ class ProjectController extends Controller
         $data = $request->all();
 
         if ($request->hasFile('main_image')) {
-            if ($project->main_image && Storage::disk('public')->exists($project->main_image)) {
+
+            if ($project->main_image &&
+                Storage::disk('public')->exists($project->main_image)) {
+
                 Storage::disk('public')->delete($project->main_image);
             }
-            $path = $request->file('main_image')->store('projects', 'public');
-            $data['main_image'] = $path;
+
+            $data['main_image'] = $request->file('main_image')
+                ->store('projects', 'public');
         }
 
         $project->update($data);
 
         $project->main_image_url = $project->main_image
-            ? url('api/'.$project->main_image)
+            ? asset('storage/'.$project->main_image)
             : null;
 
         return response()->json($project);
@@ -117,7 +138,9 @@ class ProjectController extends Controller
 
     public function destroy(Project $project)
     {
-        if ($project->main_image && Storage::disk('public')->exists($project->main_image)) {
+        if ($project->main_image &&
+            Storage::disk('public')->exists($project->main_image)) {
+
             Storage::disk('public')->delete($project->main_image);
         }
 

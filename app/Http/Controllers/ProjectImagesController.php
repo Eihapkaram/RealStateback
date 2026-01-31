@@ -11,7 +11,10 @@ class ProjectImagesController extends Controller
     public function index()
     {
         $images = ProjectImage::all()->map(function ($img) {
-            $img->url = $img->image ? url('api/project-images/files/'.$img->image) : null;
+
+            $img->image_url = $img->image
+                ? asset('storage/'.$img->image)
+                : null;
 
             return $img;
         });
@@ -23,13 +26,14 @@ class ProjectImagesController extends Controller
     {
         $request->validate([
             'project_id' => 'required|exists:projects,id',
-            'images' => 'required|array',           // استقبل مصفوفة صور
-            'images.*' => 'image|max:2048',         // تحقق من كل صورة
+            'images' => 'required|array',
+            'images.*' => 'image|max:2048',
         ]);
 
         $uploadedImages = [];
 
         foreach ($request->file('images') as $file) {
+
             $path = $file->store('project_images', 'public');
 
             $image = ProjectImage::create([
@@ -37,7 +41,7 @@ class ProjectImagesController extends Controller
                 'image' => $path,
             ]);
 
-            $image->url = url('api/project-images/files/'.$path);
+            $image->image_url = asset('storage/'.$path);
 
             $uploadedImages[] = $image;
         }
@@ -47,7 +51,9 @@ class ProjectImagesController extends Controller
 
     public function show(ProjectImage $projectImage)
     {
-        $projectImage->url = $projectImage->image ? url('api/project-images/files/'.$projectImage->image) : null;
+        $projectImage->image_url = $projectImage->image
+            ? asset('storage/'.$projectImage->image)
+            : null;
 
         return response()->json($projectImage);
     }
@@ -55,16 +61,21 @@ class ProjectImagesController extends Controller
     public function update(Request $request, ProjectImage $projectImage)
     {
         $request->validate([
+            'project_id' => 'sometimes|exists:projects,id',
             'image' => 'nullable|image|max:2048',
         ]);
 
         if ($request->hasFile('image')) {
-            if ($projectImage->image && Storage::disk('public')->exists($projectImage->image)) {
+
+            // حذف الصورة القديمة
+            if ($projectImage->image &&
+                Storage::disk('public')->exists($projectImage->image)) {
+
                 Storage::disk('public')->delete($projectImage->image);
             }
 
-            $path = $request->file('image')->store('project_images', 'public');
-            $projectImage->image = $path;
+            $projectImage->image = $request->file('image')
+                ->store('project_images', 'public');
         }
 
         if ($request->has('project_id')) {
@@ -73,14 +84,18 @@ class ProjectImagesController extends Controller
 
         $projectImage->save();
 
-        $projectImage->url = $projectImage->image ? url('api/project-images/files/'.$projectImage->image) : null;
+        $projectImage->image_url = $projectImage->image
+            ? asset('storage/'.$projectImage->image)
+            : null;
 
         return response()->json($projectImage);
     }
 
     public function destroy(ProjectImage $projectImage)
     {
-        if ($projectImage->image && Storage::disk('public')->exists($projectImage->image)) {
+        if ($projectImage->image &&
+            Storage::disk('public')->exists($projectImage->image)) {
+
             Storage::disk('public')->delete($projectImage->image);
         }
 

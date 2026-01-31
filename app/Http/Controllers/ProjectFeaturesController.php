@@ -11,8 +11,9 @@ class ProjectFeaturesController extends Controller
     public function index()
     {
         $features = ProjectFeature::all()->map(function ($feature) {
+
             $feature->image_url = $feature->image
-                ? url('api/project-features/files/'.$feature->image)
+                ? asset('storage/'.$feature->image)
                 : null;
 
             return $feature;
@@ -43,7 +44,7 @@ class ProjectFeaturesController extends Controller
         ]);
 
         $feature->image_url = $imagePath
-            ? url('api/project-features/files/'.$imagePath)
+            ? asset('storage/'.$imagePath)
             : null;
 
         return response()->json($feature, 201);
@@ -52,7 +53,7 @@ class ProjectFeaturesController extends Controller
     public function show(ProjectFeature $projectFeature)
     {
         $projectFeature->image_url = $projectFeature->image
-            ? url('api/project-features/files/'.$projectFeature->image)
+            ? asset('storage/'.$projectFeature->image)
             : null;
 
         return response()->json($projectFeature);
@@ -65,9 +66,12 @@ class ProjectFeaturesController extends Controller
             'image' => 'nullable|image',
         ]);
 
-        if ($request->hasFile('image')) 
+        if ($request->hasFile('image')) {
+
             // حذف الصورة القديمة
-            if ($projectFeature->image && Storage::disk('public')->exists($projectFeature->image)) {
+            if ($projectFeature->image &&
+                Storage::disk('public')->exists($projectFeature->image)) {
+
                 Storage::disk('public')->delete($projectFeature->image);
             }
 
@@ -82,7 +86,7 @@ class ProjectFeaturesController extends Controller
         $projectFeature->save();
 
         $projectFeature->image_url = $projectFeature->image
-            ? url('api/project-features/files/'.$projectFeature->image)
+            ? asset('storage/'.$projectFeature->image)
             : null;
 
         return response()->json($projectFeature);
@@ -90,7 +94,9 @@ class ProjectFeaturesController extends Controller
 
     public function destroy(ProjectFeature $projectFeature)
     {
-        if ($projectFeature->image && Storage::disk('public')->exists($projectFeature->image)) {
+        if ($projectFeature->image &&
+            Storage::disk('public')->exists($projectFeature->image)) {
+
             Storage::disk('public')->delete($projectFeature->image);
         }
 
