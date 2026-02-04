@@ -68,6 +68,18 @@ class ProjectController extends Controller
         return response()->json($project, 201);
     }
 
+    public function projectUnits($projectId)
+    {
+        $project = Project::with([
+            'unitTypes.units',
+        ])->findOrFail($projectId);
+
+        return response()->json([
+            'project_id' => $project->id,
+            'unit_types' => $project->unitTypes,
+        ]);
+    }
+
     public function show(Project $project)
     {
         $project->load([
