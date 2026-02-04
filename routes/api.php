@@ -42,10 +42,8 @@ Route::get('/project-locations/{projectLocation}', [ProjectLocationsController::
 Route::post('/project-interest', [ProjectInterestsController::class, 'store']);
 Route::post('/project-interests', [ProjectInterestsController::class, 'store']);
 Route::get('/project-interests/{projectInterest}', [ProjectInterestsController::class, 'show']);
-
 Route::get('unit-types/{unitType}/units', [UnitController::class, 'byType']);
 Route::get('/projects/{id}/units', [ProjectController::class, 'projectUnits']);
-
 Route::post('general-interests', [GeneralInterestController::class, 'store']);
 Route::get('general-interests/{id}', [GeneralInterestController::class, 'show']);
 Route::put('general-interests/{id}', [GeneralInterestController::class, 'update']);

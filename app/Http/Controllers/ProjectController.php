@@ -11,7 +11,7 @@ class ProjectController extends Controller
     public function index()
     {
         $projects = Project::query()
-            ->select('id', 'title', 'location', 'status', 'main_image', 'area', 'date')
+            ->select('id', 'title', 'location', 'status', 'main_image', 'area', 'date', 'overview_bedrooms', 'overview_bathrooms', 'overview_kitchens')
             ->with([
                 'features:id,project_id,feature,image',
             ])
@@ -35,6 +35,18 @@ class ProjectController extends Controller
         });
 
         return response()->json($projects);
+    }
+
+    public function projectUnits($projectId)
+    {
+        $project = Project::with([
+            'unitTypes.units',
+        ])->findOrFail($projectId);
+
+        return response()->json([
+            'project_id' => $project->id,
+            'unit_types' => $project->unitTypes,
+        ]);
     }
 
     public function store(Request $request)
@@ -66,18 +78,6 @@ class ProjectController extends Controller
             : null;
 
         return response()->json($project, 201);
-    }
-
-    public function projectUnits($projectId)
-    {
-        $project = Project::with([
-            'unitTypes.units',
-        ])->findOrFail($projectId);
-
-        return response()->json([
-            'project_id' => $project->id,
-            'unit_types' => $project->unitTypes,
-        ]);
     }
 
     public function show(Project $project)
